@@ -1,0 +1,10 @@
+node_modules
+dist
+public/wasm
+test-results
+playwright-report
+# Foto uji berisi wajah (data biometrik): jangan pernah ikut ke repositori atau build
+/*.png
+/*.jpg
+/*.jpeg
+/foto-uji/
