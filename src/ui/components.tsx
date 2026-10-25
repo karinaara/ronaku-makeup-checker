@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+﻿import { useEffect, useRef, useState, type ReactNode } from "react";
+import { t } from "../i18n";
 import type { Analysis, ConfidenceLevel, FitLabel, FitResult, Swatch } from "../types";
 import { renderLook, type Look } from "../render/tryon";
 
@@ -8,14 +9,14 @@ export function FitBadge({ label }: { label: FitLabel }) {
   return (
     <span className={`badge ${cls}`}>
       <span aria-hidden>{mark}</span>
-      {label}
+      {t(label)}
     </span>
   );
 }
 
 export function ConfidenceBadge({ level }: { level: ConfidenceLevel }) {
   const cls = level === "Tinggi" ? "ok" : level === "Sedang" ? "mid" : "bad";
-  return <span className={`badge ${cls}`}>Keyakinan {level.toLowerCase()}</span>;
+  return <span className={`badge ${cls}`}>{t("Keyakinan {level}", { level: t(level.toLowerCase()) })}</span>;
 }
 
 export function FitBlock({ fit, debug }: { fit: FitResult; debug?: boolean }) {
@@ -23,7 +24,7 @@ export function FitBlock({ fit, debug }: { fit: FitResult; debug?: boolean }) {
     <div className="stack" aria-live="polite">
       <div className="row">
         <FitBadge label={fit.label} />
-        <small className="small">estimasi, keyakinan {fit.confidence.toLowerCase()}</small>
+        <small className="small">{t("estimasi, keyakinan {level}", { level: t(fit.confidence.toLowerCase()) })}</small>
       </div>
       <ul className="reasons">
         {fit.reasons.map((r) => (
@@ -52,8 +53,8 @@ export function Toast({ text }: { text: string | null }) {
 export function useToast() {
   const [text, setText] = useState<string | null>(null);
   const timer = useRef<number>(0);
-  const show = (t: string) => {
-    setText(t);
+  const show = (msg: string) => {
+    setText(msg);
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => setText(null), 1800);
   };
@@ -74,11 +75,11 @@ export function SwatchButton({ s, onCopied, extra }: { s: Swatch; onCopied: (msg
   return (
     <button
       className="sw"
-      onClick={async () => onCopied((await copyText(s.hex)) ? `${s.hex} disalin` : `Kode: ${s.hex}`)}
-      aria-label={`${s.nama}, kode ${s.hex}. Ketuk untuk menyalin`}
+      onClick={async () => onCopied((await copyText(s.hex)) ? t("{hex} disalin", { hex: s.hex }) : t("Kode: {hex}", { hex: s.hex }))}
+      aria-label={t("{nama}, kode {hex}. Ketuk untuk menyalin", { nama: t(s.nama), hex: s.hex })}
     >
       <span className="block" style={{ background: s.hex }} />
-      <span className="nm">{s.nama}</span>
+      <span className="nm">{t(s.nama)}</span>
       <span className="hx">{s.hex}</span>
       {extra}
     </button>
@@ -124,13 +125,13 @@ const icons = {
 
 export function NavBar({ current, onGo }: { current: string; onGo: (s: "profil" | "tryon" | "foundation" | "palet") => void }) {
   const items = [
-    { id: "profil", label: "Profil", icon: icons.profil },
-    { id: "tryon", label: "Coba", icon: icons.coba },
-    { id: "foundation", label: "Foundation", icon: icons.foundation },
-    { id: "palet", label: "Palet", icon: icons.palet },
+    { id: "profil", label: t("Profil"), icon: icons.profil },
+    { id: "tryon", label: t("Coba"), icon: icons.coba },
+    { id: "foundation", label: t("Foundation"), icon: icons.foundation },
+    { id: "palet", label: t("Palet"), icon: icons.palet },
   ] as const;
   return (
-    <nav className="nav" aria-label="Navigasi utama">
+    <nav className="nav" aria-label={t("Navigasi utama")}>
       <div className="nav-in">
         {items.map((it) => (
           <button key={it.id} aria-current={current === it.id ? "page" : undefined} onClick={() => onGo(it.id)}>

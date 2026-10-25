@@ -1,5 +1,8 @@
 # 💄 Rona.ku — Find Your Makeup Shade, Try It Before You Buy It
 
+🌐 **English** | [Bahasa Indonesia](README.id.md)
+
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-ronaku.netlify.app-00C7B7?logo=netlify&logoColor=white)](https://ronaku.netlify.app/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
@@ -9,14 +12,16 @@
 
 A mobile-first web app that helps women find makeup colors that suit them and **see the result on their own face before buying**. From a single selfie it estimates a color profile (skin depth, undertone, natural contrast), lets you try lipstick, blush and eyeshadow, and hands you hex codes you can take to any store. Everything runs **on-device**: the photo never leaves the browser.
 
-> 🇮🇩 The app UI is written in Indonesian (target users are Indonesian women, including hijab wearers). This README is in English for the repository.
+🚀 **Live Demo: [ronaku.netlify.app](https://ronaku.netlify.app/)** — open it on your phone or laptop and try it with your own selfie (processed on your device only).
+
+> 🌐 The app is **bilingual: Indonesian and English**. Use the `ID | EN` switch at the top; it defaults to your browser language and remembers your choice. The primary audience is Indonesian women (including hijab wearers), so Indonesian is the source language.
 
 > 🔒 **Status:** MVP plus eyeshadow try-on. All thresholds are **starting values that still need calibration** with a diverse photo set. See [Known Limitations](#-known-limitations).
 
 ## 📌 Table of Contents
 
 * [Overview](#-overview)
-* [Preview](#-preview)
+* [Live Demo & Preview](#-live-demo--preview)
 * [Key Features](#-key-features)
 * [How It Works](#-how-it-works)
 * [Color Analysis Pipeline](#-color-analysis-pipeline)
@@ -42,7 +47,11 @@ Buying the wrong foundation shade, or not knowing which lipstick and blush will 
 * **Privacy first.** A face photo is biometric data, so all processing stays on your device.
 * **Suggestions, not laws.** Face shape and makeup are subjective, so every recommendation can be corrected by the user.
 
-## 📸 Preview
+## 📸 Live Demo & Preview
+
+🌐 **Try the finished app: [https://ronaku.netlify.app/](https://ronaku.netlify.app/)**
+
+Tips for the demo: use natural light, face the camera straight on, no filters. The camera needs HTTPS (the demo has it). Add `?debug=1` to the URL to see the sample regions and the numbers behind the result.
 
 <!--
   Add screenshots here. Use synthetic or consenting-model images only: face photos are biometric data
@@ -61,7 +70,7 @@ _Screenshots to be added._
 * 🔀 **Before / After & Side-by-Side Compare:** Drag a divider to compare, or view 2–4 colors next to each other, because that is where users actually decide.
 * 🧴 **Foundation Range:** A four-shade range (lighter → darker) with in-store testing tips. Foundation is intentionally **not** simulated on the face.
 * 🗂️ **Full Palette:** Foundation, contour, bronzer, blush, highlighter, eyeshadow, eyeliner, brows, lipstick and color correctors on one page. The palette is generated from your profile (not static), and "show all" reveals cool and bold shades too.
-* 🧪 **Debug Mode:** Shows sample regions (used / discarded), L\*a\*b\* values, hue, depth, undertone score, per-component fit scores and confidence factors, so rules can be tuned without a makeup artist.
+* 🌐 **Bilingual UI (ID / EN):** Every screen, the fit reasons, color names, error messages and the privacy policy are available in both languages. A test checks that no source string is left untranslated. Shows sample regions (used / discarded), L\*a\*b\* values, hue, depth, undertone score, per-component fit scores and confidence factors, so rules can be tuned without a makeup artist.
 * 👍 **Like / Dislike Signal:** Stores only parameters (product, hex, label, vote) locally, as an early signal for tuning rules later.
 
 ## 🔄 How It Works
@@ -134,7 +143,7 @@ scripts/      # copy-wasm.mjs
 
 * The photo and landmarks are processed **on the device only**: nothing is uploaded, and no image or face data goes to analytics, logs or error trackers (none are used).
 * The photo lives in memory only and is discarded on "retake" or when the page closes.
-* The only thing persisted is the optional like/dislike signal in `localStorage`: product, hex, label and vote, with **no image**.
+* The only things persisted in `localStorage` are your language choice and the optional like/dislike signal (product, hex, label and vote), with **no image**.
 * The browser downloads the Face Landmarker **model file** from `storage.googleapis.com` (pinned version). Only the model is fetched. For fully offline use, put it in `public/models/` and set `VITE_FACE_MODEL_URL=./models/face_landmarker.task`.
 * An in-app privacy policy draft covers biometric data and deletion. It should be reviewed by a legal professional (Indonesia's PDP Law) before any public release.
 * Test photos contain faces: `.gitignore` excludes images in the project root. **Never commit face photos.**

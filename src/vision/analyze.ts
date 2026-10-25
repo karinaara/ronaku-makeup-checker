@@ -11,6 +11,7 @@ import {
   trimmedMedianLab,
   undertoneFromHue,
 } from "../color/skin";
+import { t } from "../i18n";
 import { FACE_CHECK, SKIN } from "../rules/thresholds";
 import type { Analysis, DebugInfo, Pt, SkinProfile } from "../types";
 import { browHulls, contours, pick } from "./contours";
@@ -116,13 +117,13 @@ export function validateFace(lm: Pt[], w: number, h: number) {
   const faceW = dist(lm[234], lm[454]);
   const faceWidthFrac = faceW / Math.min(w, h); // sisi terpendek, supaya foto landscape tidak salah dinilai
   if (faceWidthFrac < FACE_CHECK.minFaceWidthFrac)
-    throw new AnalysisError("small", "Wajah terlalu kecil di foto. Dekatkan wajah ke kamera sampai memenuhi bingkai.");
-  const t = ((lm[1].x - lm[234].x) * (lm[454].x - lm[234].x) + (lm[1].y - lm[234].y) * (lm[454].y - lm[234].y)) / (faceW * faceW);
-  if (Math.abs(t - 0.5) > FACE_CHECK.maxYaw)
-    throw new AnalysisError("yaw", "Wajah terlalu menoleh. Hadapkan wajah lurus ke kamera.");
+    throw new AnalysisError("small", t("Wajah terlalu kecil di foto. Dekatkan wajah ke kamera sampai memenuhi bingkai."));
+  const nosePos = ((lm[1].x - lm[234].x) * (lm[454].x - lm[234].x) + (lm[1].y - lm[234].y) * (lm[454].y - lm[234].y)) / (faceW * faceW);
+  if (Math.abs(nosePos - 0.5) > FACE_CHECK.maxYaw)
+    throw new AnalysisError("yaw", t("Wajah terlalu menoleh. Hadapkan wajah lurus ke kamera."));
   const frame = faceFrame(lm);
   if (Math.abs(frame.rollDeg) > FACE_CHECK.maxRollDeg)
-    throw new AnalysisError("roll", "Kepala terlalu miring. Tegakkan kepala dan ambil foto lagi.");
+    throw new AnalysisError("roll", t("Kepala terlalu miring. Tegakkan kepala dan ambil foto lagi."));
   return { faceW, faceWidthFrac, frame };
 }
 
@@ -146,11 +147,11 @@ export async function analyzeImage(source: CanvasImageSource, w: number, h: numb
   try {
     landmarker = await getLandmarker();
   } catch {
-    throw new AnalysisError("load", "Model deteksi wajah gagal dimuat. Cek koneksi internet lalu coba lagi.");
+    throw new AnalysisError("load", t("Model deteksi wajah gagal dimuat. Cek koneksi internet lalu coba lagi."));
   }
   const res = landmarker.detect(photo);
   const raw = res.faceLandmarks?.[0];
-  if (!raw) throw new AnalysisError("no-face", "Wajah tidak terdeteksi. Pastikan wajah terlihat jelas, tidak tertutup, dan menghadap kamera.");
+  if (!raw) throw new AnalysisError("no-face", t("Wajah tidak terdeteksi. Pastikan wajah terlihat jelas, tidak tertutup, dan menghadap kamera."));
   const lm: Pt[] = raw.map((p) => ({ x: p.x * photo.width, y: p.y * photo.height }));
 
   // 1) Validasi wajah, 2) area sampel kulit (juga dipakai live view kamera)
@@ -196,7 +197,7 @@ export async function analyzeImage(source: CanvasImageSource, w: number, h: numb
     return true;
   });
   const pooled = perRegion.flatMap((r, i) => (used[i] ? r.labs : []));
-  if (pooled.length === 0) throw new AnalysisError("no-face", "Area kulit tidak terbaca. Pastikan wajah tidak tertutup dan cahaya cukup.");
+  if (pooled.length === 0) throw new AnalysisError("no-face", t("Area kulit tidak terbaca. Pastikan wajah tidak tertutup dan cahaya cukup."));
   const skinLab = trimmedMedianLab(pooled);
   const rawPooled = trimmedMedianLab(perRegion.flatMap((r, i) => (used[i] ? labsOf(pixelsIn(photo, [r.polygon]), [1, 1, 1]) : [])));
 

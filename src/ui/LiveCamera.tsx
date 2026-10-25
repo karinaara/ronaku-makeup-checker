@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
+import { t } from "../i18n";
 import type { Pt } from "../types";
 import { AnalysisError, sampleRegionDefs, validateFace } from "../vision/analyze";
 import { contours, pick } from "../vision/contours";
@@ -17,7 +18,7 @@ export function LiveCamera({ onCapture, onCancel, onError }: { onCapture: (c: HT
   const video = useRef<HTMLVideoElement>(null);
   const overlay = useRef<HTMLCanvasElement>(null);
   const okRef = useRef(false);
-  const [status, setStatus] = useState<Status>({ ok: false, text: "Memuat deteksi wajah…" });
+  const [status, setStatus] = useState<Status>({ ok: false, text: t("Memuat deteksi wajah…") });
   const [live, setLive] = useState(false); // deteksi benar-benar berjalan (bukan mode cadangan)
   const [auto, setAuto] = useState(true);
   const [count, setCount] = useState<number | null>(null);
@@ -77,26 +78,28 @@ export function LiveCamera({ onCapture, onCancel, onError }: { onCapture: (c: HT
       }
     };
 
-    const loop = (t: number) => {
+    const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
       const v = video.current;
-      if (!v || v.readyState < 2 || t - last < FRAME_MS || !landmarker) return;
-      last = t;
+      if (!v || v.readyState < 2 || now - last < FRAME_MS || !landmarker) return;
+      last = now;
       const vw = v.videoWidth, vh = v.videoHeight;
       const raw = landmarker.detect(v).faceLandmarks?.[0];
       if (!raw) {
         draw(null, vw, vh, false);
-        report({ ok: false, text: "Wajah belum terdeteksi. Hadapkan wajah ke kamera." });
+        report({ ok: false, text: t("Wajah belum terdeteksi. Hadapkan wajah ke kamera.") });
         return;
       }
       const pts = raw.map((p) => ({ x: p.x * vw, y: p.y * vh }));
       try {
         validateFace(pts, vw, vh);
         draw(pts, vw, vh, true);
-        report({ ok: true, text: "Posisi pas. Area hijau adalah kulit yang akan dibaca." });
+        report({ ok: true, text: t("Posisi pas. Area hijau adalah kulit yang akan dibaca.") });
       } catch (e) {
         draw(pts, vw, vh, false);
-        report({ ok: false, text: e instanceof AnalysisError ? e.message.replace(" dan ambil foto lagi", "") : "Atur posisi wajahmu." });
+        const text =
+          e instanceof AnalysisError ? (e.code === "roll" ? t("Kepala terlalu miring. Tegakkan kepala.") : e.message) : t("Atur posisi wajahmu.");
+        report({ ok: false, text });
       }
     };
 
@@ -105,7 +108,7 @@ export function LiveCamera({ onCapture, onCancel, onError }: { onCapture: (c: HT
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 1280 } }, audio: false });
       } catch {
-        if (!cancelled) onError("Izin kamera ditolak atau kamera tidak ditemukan. Kamu bisa mengunggah foto.");
+        if (!cancelled) onError(t("Izin kamera ditolak atau kamera tidak ditemukan. Kamu bisa mengunggah foto."));
         return;
       }
       if (cancelled) return stream.getTracks().forEach((t) => t.stop());
@@ -116,7 +119,7 @@ export function LiveCamera({ onCapture, onCancel, onError }: { onCapture: (c: HT
       try {
         landmarker = await getLandmarker();
       } catch {
-        if (!cancelled) report({ ok: true, text: "Deteksi langsung tidak tersedia. Kamu tetap bisa mengambil foto." });
+        if (!cancelled) report({ ok: true, text: t("Deteksi langsung tidak tersedia. Kamu tetap bisa mengambil foto.") });
         return;
       }
       if (!cancelled) {
@@ -170,20 +173,20 @@ export function LiveCamera({ onCapture, onCancel, onError }: { onCapture: (c: HT
   return (
     <div className="stack">
       <div className="camera">
-        <video ref={video} playsInline muted aria-label="Pratinjau kamera" />
+        <video ref={video} playsInline muted aria-label={t("Pratinjau kamera")} />
         <canvas ref={overlay} className="guide" aria-hidden />
         {count !== null && <div className="countdown" aria-hidden>{count}</div>}
       </div>
       <div className={status.ok ? "note" : "alert"} role="status" aria-live="polite" style={{ fontWeight: 600 }}>
-        {count !== null ? `Tahan posisimu… foto diambil dalam ${count}` : status.text}
+        {count !== null ? t("Tahan posisimu… foto diambil dalam {n}", { n: count }) : status.text}
       </div>
       <label className="check">
         <input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} />
-        Ambil foto otomatis (hitung mundur 3 detik)
+        {t("Ambil foto otomatis (hitung mundur 3 detik)")}
       </label>
       <div className="row">
-        <button className="btn primary" style={{ flex: 1 }} onClick={snap} disabled={!status.ok}>Ambil foto sekarang</button>
-        <button className="btn ghost" onClick={onCancel}>Batal</button>
+        <button className="btn primary" style={{ flex: 1 }} onClick={snap} disabled={!status.ok}>{t("Ambil foto sekarang")}</button>
+        <button className="btn ghost" onClick={onCancel}>{t("Batal")}</button>
       </div>
     </div>
   );

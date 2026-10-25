@@ -9,6 +9,7 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${PORT}`,
     channel: "chrome",
+    locale: "id-ID", // bahasa bawaan aplikasi mengikuti bahasa browser; tes lama berbahasa Indonesia
     viewport: { width: 390, height: 844 },
     isMobile: true,
     hasTouch: true,

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { FACE_SHAPE_LABEL, type FaceShapeKey } from "../color/skin";
 import type { Look, LipFinish } from "../render/tryon";
+import { t } from "../i18n";
 import { scoreFit } from "../rules/fit";
 import { buildPalette } from "../rules/palette";
 import {
@@ -28,6 +29,7 @@ const FINISH: { id: LipFinish; label: string }[] = [
   { id: "glossy", label: "Glossy" },
 ];
 const SHAPES = Object.keys(FACE_SHAPE_LABEL) as FaceShapeKey[];
+const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
 
 function saveFeedback(entry: object) {
   // Hanya parameter (produk, warna, label, suara). Tidak ada gambar atau data wajah.
@@ -89,7 +91,7 @@ export function TryOnScreen({ a, debug }: { a: Analysis; debug: boolean }) {
   const onChip = (s: Swatch) => (compare ? toggleCompare(s) : setCurrent(s));
   const vote = (v: "suka" | "kurang") => {
     saveFeedback({ produk: product, hex: current.hex, label: fit.label, suara: v, finish: product === "lipstik" ? finish : product === "blush" ? activeStyle : eyeStyle });
-    toast.show("Terima kasih, masukanmu membantu menyetel aturan.");
+    toast.show(t("Terima kasih, masukanmu membantu menyetel aturan."));
   };
   const lookFor = (s: Swatch): Look =>
     product === "lipstik"
@@ -101,26 +103,26 @@ export function TryOnScreen({ a, debug }: { a: Analysis; debug: boolean }) {
   return (
     <>
       <section className="stack">
-        <h1>Coba di wajahmu</h1>
-        <p className="muted">Geser garis putih untuk membandingkan sebelum dan sesudah.</p>
+        <h1>{t("Coba di wajahmu")}</h1>
+        <p className="muted">{t("Geser garis putih untuk membandingkan sebelum dan sesudah.")}</p>
       </section>
 
       {compare && tab === "warna" ? (
         <section className="card">
           <div className="row between">
-            <h2>Bandingkan {product}</h2>
-            <small className="small">{picked.length}/4 dipilih</small>
+            <h2>{t("Bandingkan {produk}", { produk: t(product) })}</h2>
+            <small className="small">{t("{n}/4 dipilih", { n: picked.length })}</small>
           </div>
           {picked.length === 0 ? (
-            <p className="note">Pilih 2 sampai 4 warna di bawah untuk melihatnya berdampingan.</p>
+            <p className="note">{t("Pilih 2 sampai 4 warna di bawah untuk melihatnya berdampingan.")}</p>
           ) : (
             <div className="grid2">
               {picked.map((s) => {
                 const f = scoreFit(p, s.hex, fitKey(product));
                 return (
                   <div className="cell" key={s.hex}>
-                    <TryOnCanvas analysis={a} look={lookFor(s)} maxW={360} label={`Wajah dengan ${s.nama}`} />
-                    <span className="small" style={{ fontWeight: 700 }}>{s.nama}</span>
+                    <TryOnCanvas analysis={a} look={lookFor(s)} maxW={360} label={t("Wajah dengan {nama}", { nama: t(s.nama) })} />
+                    <span className="small" style={{ fontWeight: 700 }}>{t(s.nama)}</span>
                     <FitBadge label={f.label} />
                   </div>
                 );
@@ -130,37 +132,37 @@ export function TryOnScreen({ a, debug }: { a: Analysis; debug: boolean }) {
         </section>
       ) : (
         <div className="stage">
-          <TryOnCanvas analysis={a} look={look} label="Wajahmu dengan makeup" />
+          <TryOnCanvas analysis={a} look={look} label={t("Wajahmu dengan makeup")} />
           <div className="layer" style={{ clipPath: `inset(0 ${100 - split}% 0 0)` }}>
-            <TryOnCanvas analysis={a} look={before} label="Wajahmu tanpa makeup" />
+            <TryOnCanvas analysis={a} look={before} label={t("Wajahmu tanpa makeup")} />
           </div>
-          <span className="tag" style={{ left: 10 }}>Sebelum</span>
-          <span className="tag" style={{ right: 10 }}>Sesudah</span>
+          <span className="tag" style={{ left: 10 }}>{t("Sebelum")}</span>
+          <span className="tag" style={{ right: 10 }}>{t("Sesudah")}</span>
           <div className="divider" style={{ left: `${split}%` }} />
-          <input type="range" min={0} max={100} value={split} onChange={(e) => setSplit(Number(e.target.value))} aria-label="Geser untuk membandingkan sebelum dan sesudah" />
+          <input type="range" min={0} max={100} value={split} onChange={(e) => setSplit(Number(e.target.value))} aria-label={t("Geser untuk membandingkan sebelum dan sesudah")} />
         </div>
       )}
 
-      <div className="seg" role="tablist" aria-label="Jenis pengaturan">
-        <button role="tab" aria-selected={tab === "warna"} onClick={() => setTab("warna")}>Warna</button>
-        <button role="tab" aria-selected={tab === "posisi"} onClick={() => setTab("posisi")}>Posisi</button>
+      <div className="seg" role="tablist" aria-label={t("Jenis pengaturan")}>
+        <button role="tab" aria-selected={tab === "warna"} onClick={() => setTab("warna")}>{t("Warna")}</button>
+        <button role="tab" aria-selected={tab === "posisi"} onClick={() => setTab("posisi")}>{t("Posisi")}</button>
       </div>
 
       {tab === "warna" ? (
         <section className="card">
-          <div className="seg" aria-label="Produk">
-            <button aria-pressed={product === "lipstik"} onClick={() => setProduct("lipstik")}>Lipstik</button>
-            <button aria-pressed={product === "blush"} onClick={() => setProduct("blush")}>Blush</button>
-            <button aria-pressed={product === "eyeshadow"} onClick={() => setProduct("eyeshadow")}>Eyeshadow</button>
+          <div className="seg" aria-label={t("Produk")}>
+            <button aria-pressed={product === "lipstik"} onClick={() => setProduct("lipstik")}>{t("Lipstik")}</button>
+            <button aria-pressed={product === "blush"} onClick={() => setProduct("blush")}>{t("Blush")}</button>
+            <button aria-pressed={product === "eyeshadow"} onClick={() => setProduct("eyeshadow")}>{t("Eyeshadow")}</button>
           </div>
 
-          <div className="chips" role="group" aria-label="Pilih warna">
+          <div className="chips" role="group" aria-label={t("Pilih warna")}>
             {options.map((s) => {
               const on = compare ? picked.some((x) => x.hex === s.hex) : current.hex === s.hex;
               return (
                 <button key={s.hex} className="chip" aria-pressed={on} onClick={() => onChip(s)}>
                   <span className="dot" style={{ background: s.hex }} />
-                  {s.nama}
+                  {t(s.nama)}
                 </button>
               );
             })}
@@ -176,100 +178,100 @@ export function TryOnScreen({ a, debug }: { a: Analysis; debug: boolean }) {
                   if (compare) toggleCompare(own);
                   else setCurrent(own);
                 }}
-                aria-label="Pilih warna sendiri"
+                aria-label={t("Pilih warna sendiri")}
               />
-              <span className="small" style={{ fontWeight: 600 }}>Warna sendiri</span>
+              <span className="small" style={{ fontWeight: 600 }}>{t("Warna sendiri")}</span>
             </label>
             <label className="check" style={{ marginLeft: "auto" }}>
               <input type="checkbox" checked={compare} onChange={(e) => setCompare(e.target.checked)} />
-              Bandingkan
+              {t("Bandingkan")}
             </label>
           </div>
 
           {product === "lipstik" && (
             <>
-              <div className="seg" aria-label="Finish bibir">
+              <div className="seg" aria-label={t("Finish bibir")}>
                 {FINISH.map((f) => (
                   <button key={f.id} aria-pressed={finish === f.id} onClick={() => setFinish(f.id)}>{f.label}</button>
                 ))}
               </div>
-              <Slider label="Intensitas" value={Math.round(lipInt * 100)} min={20} max={100} step={5} display={`${Math.round(lipInt * 100)}%`} onChange={(v) => setLipInt(v / 100)} />
+              <Slider label={t("Intensitas")} value={Math.round(lipInt * 100)} min={20} max={100} step={5} display={`${Math.round(lipInt * 100)}%`} onChange={(v) => setLipInt(v / 100)} />
             </>
           )}
           {product === "blush" && (
-            <Slider label="Intensitas" value={Math.round(params.intensitas * 100)} min={10} max={100} step={5} display={`${Math.round(params.intensitas * 100)}%`} onChange={(v) => setParams((s) => ({ ...s, intensitas: v / 100 }))} />
+            <Slider label={t("Intensitas")} value={Math.round(params.intensitas * 100)} min={10} max={100} step={5} display={`${Math.round(params.intensitas * 100)}%`} onChange={(v) => setParams((s) => ({ ...s, intensitas: v / 100 }))} />
           )}
           {product === "eyeshadow" && (
             <>
-              <div className="seg" aria-label="Gaya eyeshadow">
+              <div className="seg" aria-label={t("Gaya eyeshadow")}>
                 {EYE_STYLES.map((s) => (
-                  <button key={s.id} aria-pressed={eyeStyle === s.id} onClick={() => setEyeStyle(s.id)}>{s.nama}</button>
+                  <button key={s.id} aria-pressed={eyeStyle === s.id} onClick={() => setEyeStyle(s.id)}>{t(s.nama)}</button>
                 ))}
               </div>
-              <p className="small muted">{EYE_STYLES.find((s) => s.id === eyeStyle)?.deskripsi}</p>
+              <p className="small muted">{t(EYE_STYLES.find((s) => s.id === eyeStyle)?.deskripsi ?? "")}</p>
               <div className="field">
-                <label htmlFor="bentukMata"><span>Bentuk matamu</span></label>
+                <label htmlFor="bentukMata"><span>{t("Bentuk matamu")}</span></label>
                 <select id="bentukMata" value={eyeShape} onChange={(e) => setEyeShape(e.target.value as EyeShapeId)}>
-                  {EYE_SHAPES.map((s) => <option key={s.id} value={s.id}>{s.nama}</option>)}
+                  {EYE_SHAPES.map((s) => <option key={s.id} value={s.id}>{t(s.nama)}</option>)}
                 </select>
-                <small className="small muted">{EYE_SHAPE_NOTE}</small>
+                <small className="small muted">{t(EYE_SHAPE_NOTE)}</small>
               </div>
-              <Slider label="Intensitas" value={Math.round(eyeInt * 100)} min={10} max={100} step={5} display={`${Math.round(eyeInt * 100)}%`} onChange={(v) => setEyeInt(v / 100)} />
+              <Slider label={t("Intensitas")} value={Math.round(eyeInt * 100)} min={10} max={100} step={5} display={`${Math.round(eyeInt * 100)}%`} onChange={(v) => setEyeInt(v / 100)} />
               <div className="stack">
-                <div className="row"><FitBadge label={eyeFit.label} /><small className="small">saran gaya untuk bentuk matamu</small></div>
-                <ul className="reasons"><li>{eyeFit.alasan}</li></ul>
+                <div className="row"><FitBadge label={eyeFit.label} /><small className="small">{t("saran gaya untuk bentuk matamu")}</small></div>
+                <ul className="reasons"><li>{t(eyeFit.alasan)}</li></ul>
               </div>
             </>
           )}
 
           <div className="stack">
-            <h3>{current.nama} <span className="muted small">{current.hex}</span></h3>
+            <h3>{t(current.nama)} <span className="muted small">{current.hex}</span></h3>
             <FitBlock fit={fit} debug={debug} />
             <div className="row">
-              <button className="btn ghost small" onClick={() => vote("suka")}>👍 Suka hasilnya</button>
-              <button className="btn ghost small" onClick={() => vote("kurang")}>👎 Kurang suka</button>
+              <button className="btn ghost small" onClick={() => vote("suka")}>👍 {t("Suka hasilnya")}</button>
+              <button className="btn ghost small" onClick={() => vote("kurang")}>👎 {t("Kurang suka")}</button>
             </div>
           </div>
         </section>
       ) : (
         <section className="card">
-          <h2>Posisi blush</h2>
+          <h2>{t("Posisi blush")}</h2>
           <p>
-            Wajahmu <b>cenderung {FACE_SHAPE_LABEL[shape]}</b> <span className="muted small">(perkiraan dari foto)</span>
+            {t("Wajahmu")} <b>{t("cenderung {bentuk}", { bentuk: t(FACE_SHAPE_LABEL[shape]) })}</b> <span className="muted small">{t("(perkiraan dari foto)")}</span>
           </p>
           <div className="field">
-            <label htmlFor="shape"><span>Kurang pas? Koreksi bentuk wajah</span></label>
+            <label htmlFor="shape"><span>{t("Kurang pas? Koreksi bentuk wajah")}</span></label>
             <select id="shape" value={shape} onChange={(e) => setShape(e.target.value as FaceShapeKey)}>
-              {SHAPES.map((k) => <option key={k} value={k}>{FACE_SHAPE_LABEL[k][0].toUpperCase() + FACE_SHAPE_LABEL[k].slice(1)}</option>)}
+              {SHAPES.map((k) => <option key={k} value={k}>{cap(t(FACE_SHAPE_LABEL[k]))}</option>)}
             </select>
           </div>
           <label className="check">
             <input type="checkbox" checked={hijab} onChange={(e) => setHijab(e.target.checked)} />
-            Aku berhijab
+            {t("Aku berhijab")}
           </label>
-          {hijab && <p className="note">Gaya yang naik ke pelipis disembunyikan dulu sampai aturan untuk pengguna hijab selesai divalidasi.</p>}
+          {hijab && <p className="note">{t("Gaya yang naik ke pelipis disembunyikan dulu sampai aturan untuk pengguna hijab selesai divalidasi.")}</p>}
 
-          <div className="chips" role="group" aria-label="Gaya blush">
+          <div className="chips" role="group" aria-label={t("Gaya blush")}>
             {styles.map((s) => {
               const f: FitLabel = BLUSH_BY_SHAPE[shape][s.id].label;
               return (
                 <button key={s.id} className="chip" aria-pressed={activeStyle === s.id} onClick={() => { setStyleId(s.id); setParams((x) => ({ ...x, tinggi: 0, sudut: 0, ukuran: 1 })); }}>
-                  {s.nama} · {f}
+                  {t(s.nama)} · {t(f)}
                 </button>
               );
             })}
           </div>
           <div className="stack">
-            <div className="row"><FitBadge label={styleFit.label} /><small className="small">{BLUSH_STYLES.find((s) => s.id === activeStyle)?.deskripsi}</small></div>
-            <ul className="reasons"><li>{styleFit.alasan}</li></ul>
+            <div className="row"><FitBadge label={styleFit.label} /><small className="small">{t(BLUSH_STYLES.find((s) => s.id === activeStyle)?.deskripsi ?? "")}</small></div>
+            <ul className="reasons"><li>{t(styleFit.alasan)}</li></ul>
           </div>
 
-          <Slider label="Tinggi" value={Math.round(-params.tinggi * 100)} min={-25} max={25} step={1} display={params.tinggi < -0.005 ? "lebih tinggi" : params.tinggi > 0.005 ? "lebih rendah" : "bawaan"} onChange={(v) => setParams((s) => ({ ...s, tinggi: -v / 100 }))} />
-          <Slider label="Sudut" value={params.sudut} min={-20} max={20} step={1} display={`${params.sudut > 0 ? "+" : ""}${params.sudut}°`} onChange={(v) => setParams((s) => ({ ...s, sudut: v }))} />
-          <Slider label="Ukuran" value={Math.round(params.ukuran * 100)} min={60} max={150} step={5} display={`${Math.round(params.ukuran * 100)}%`} onChange={(v) => setParams((s) => ({ ...s, ukuran: v / 100 }))} />
-          <Slider label="Intensitas" value={Math.round(params.intensitas * 100)} min={10} max={100} step={5} display={`${Math.round(params.intensitas * 100)}%`} onChange={(v) => setParams((s) => ({ ...s, intensitas: v / 100 }))} />
-          <button className="btn ghost small" onClick={() => setParams(DEFAULT_BLUSH_PARAMS)}>Atur ulang</button>
-          <p className="small muted">Ini saran, bukan aturan. Bentuk wajah dan makeup itu subjektif, pakai yang menurutmu paling nyaman. Highlighter, alis, dan eyeshadow akan menyusul.</p>
+          <Slider label={t("Tinggi")} value={Math.round(-params.tinggi * 100)} min={-25} max={25} step={1} display={params.tinggi < -0.005 ? t("lebih tinggi") : params.tinggi > 0.005 ? t("lebih rendah") : t("bawaan")} onChange={(v) => setParams((s) => ({ ...s, tinggi: -v / 100 }))} />
+          <Slider label={t("Sudut")} value={params.sudut} min={-20} max={20} step={1} display={`${params.sudut > 0 ? "+" : ""}${params.sudut}°`} onChange={(v) => setParams((s) => ({ ...s, sudut: v }))} />
+          <Slider label={t("Ukuran")} value={Math.round(params.ukuran * 100)} min={60} max={150} step={5} display={`${Math.round(params.ukuran * 100)}%`} onChange={(v) => setParams((s) => ({ ...s, ukuran: v / 100 }))} />
+          <Slider label={t("Intensitas")} value={Math.round(params.intensitas * 100)} min={10} max={100} step={5} display={`${Math.round(params.intensitas * 100)}%`} onChange={(v) => setParams((s) => ({ ...s, intensitas: v / 100 }))} />
+          <button className="btn ghost small" onClick={() => setParams(DEFAULT_BLUSH_PARAMS)}>{t("Atur ulang")}</button>
+          <p className="small muted">{t("Ini saran, bukan aturan. Bentuk wajah dan makeup itu subjektif, pakai yang menurutmu paling nyaman. Highlighter dan alis akan menyusul.")}</p>
         </section>
       )}
 

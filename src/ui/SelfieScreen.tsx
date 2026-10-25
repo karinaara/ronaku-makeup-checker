@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { t } from "../i18n";
 import type { Analysis } from "../types";
 import { AnalysisError, analyzeImage } from "../vision/analyze";
 import { LiveCamera } from "./LiveCamera";
@@ -17,7 +18,7 @@ export function SelfieScreen({ onDone }: { onDone: (a: Analysis) => void }) {
     try {
       onDone(await analyzeImage(src, w, h));
     } catch (e) {
-      setError(e instanceof AnalysisError ? e.message : "Terjadi masalah saat membaca foto. Coba foto lain.");
+      setError(e instanceof AnalysisError ? e.message : t("Terjadi masalah saat membaca foto. Coba foto lain."));
       setMode("idle");
     }
   };
@@ -25,7 +26,7 @@ export function SelfieScreen({ onDone }: { onDone: (a: Analysis) => void }) {
   const openCamera = () => {
     setError(null);
     if (!navigator.mediaDevices?.getUserMedia) {
-      setError("Kamera tidak tersedia di browser ini. Kamu bisa mengunggah foto.");
+      setError(t("Kamera tidak tersedia di browser ini. Kamu bisa mengunggah foto."));
       return;
     }
     setMode("camera");
@@ -38,7 +39,7 @@ export function SelfieScreen({ onDone }: { onDone: (a: Analysis) => void }) {
       await run(bmp, bmp.width, bmp.height);
       bmp.close();
     } catch {
-      setError("File tidak bisa dibuka sebagai gambar. Coba format JPG atau PNG.");
+      setError(t("File tidak bisa dibuka sebagai gambar. Coba format JPG atau PNG."));
     }
     if (file.current) file.current.value = "";
   };
@@ -47,16 +48,16 @@ export function SelfieScreen({ onDone }: { onDone: (a: Analysis) => void }) {
     return (
       <div className="card" role="status" aria-live="polite" style={{ alignItems: "center", padding: 40 }}>
         <div className="spinner" />
-        <h2>Membaca warna kulitmu…</h2>
-        <p className="muted small">Diproses di perangkatmu. Pertama kali bisa agak lama karena model deteksi wajah dimuat.</p>
+        <h2>{t("Membaca warna kulitmu…")}</h2>
+        <p className="muted small">{t("Diproses di perangkatmu. Pertama kali bisa agak lama karena model deteksi wajah dimuat.")}</p>
       </div>
     );
 
   return (
     <>
       <section className="stack">
-        <h1>Temukan ronamu.</h1>
-        <p className="muted">Dari satu selfie, kami perkirakan warna kulitmu lalu kamu bisa mencoba warna makeup sebelum membeli.</p>
+        <h1>{t("Temukan ronamu.")}</h1>
+        <p className="muted">{t("Dari satu selfie, kami perkirakan warna kulitmu lalu kamu bisa mencoba warna makeup sebelum membeli.")}</p>
       </section>
 
       {error && <div className="alert" role="alert">{error}</div>}
@@ -79,16 +80,16 @@ export function SelfieScreen({ onDone }: { onDone: (a: Analysis) => void }) {
               </svg>
             </div>
             <ul className="reasons" style={{ color: "var(--text)" }}>
-              <li>Kamera mendeteksi wajahmu langsung dan menandai kulit yang dibaca. Tombol foto aktif saat posisimu pas.</li>
-              <li>Hadapkan wajah lurus ke kamera, rambut dan hijab tidak menutupi dahi dan pipi.</li>
-              <li>Cari cahaya alami (dekat jendela), hindari lampu kuning atau cahaya dari samping.</li>
-              <li>Tanpa filter dan tanpa efek beauty. Lebih baik tanpa makeup di pipi dan dahi.</li>
+              <li>{t("Kamera mendeteksi wajahmu langsung dan menandai kulit yang dibaca. Tombol foto aktif saat posisimu pas.")}</li>
+              <li>{t("Hadapkan wajah lurus ke kamera, rambut dan hijab tidak menutupi dahi dan pipi.")}</li>
+              <li>{t("Cari cahaya alami (dekat jendela), hindari lampu kuning atau cahaya dari samping.")}</li>
+              <li>{t("Tanpa filter dan tanpa efek beauty. Lebih baik tanpa makeup di pipi dan dahi.")}</li>
             </ul>
-            <button className="btn primary block" onClick={openCamera}>Ambil foto</button>
-            <button className="btn block" onClick={() => file.current?.click()}>Unggah foto</button>
+            <button className="btn primary block" onClick={openCamera}>{t("Ambil foto")}</button>
+            <button className="btn block" onClick={() => file.current?.click()}>{t("Unggah foto")}</button>
             <input ref={file} type="file" accept="image/*" hidden onChange={(e) => void onFile(e.target.files?.[0])} />
           </div>
-          <p className="note">🔒 Fotomu diproses di perangkat ini saja. Tidak diunggah, tidak disimpan, dan hilang saat halaman ditutup.</p>
+          <p className="note">🔒 {t("Fotomu diproses di perangkat ini saja. Tidak diunggah, tidak disimpan, dan hilang saat halaman ditutup.")}</p>
           <PrivacyPolicy />
         </>
       )}
@@ -107,7 +108,7 @@ function Guide({ inline }: { inline?: boolean }) {
         <ellipse cx="112" cy="268" rx="20" ry="15" />
         <ellipse cx="188" cy="268" rx="20" ry="15" />
       </g>
-      <text x="150" y="360" textAnchor="middle" fontSize="13" fontWeight="700" fill="#fff">Area hijau = bagian kulit yang dibaca</text>
+      <text x="150" y="360" textAnchor="middle" fontSize="13" fontWeight="700" fill="#fff">{t("Area hijau = bagian kulit yang dibaca")}</text>
     </>
   );
   return inline ? (

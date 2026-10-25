@@ -1,10 +1,11 @@
 // Penilaian kecocokan berbasis aturan (tanpa LLM, tanpa persentase di UI).
 import { chroma, hexToLab, hueAngle } from "../color/convert";
 import type { FitLabel, FitResult, SkinProfile } from "../types";
+import { t } from "../i18n";
 import { FIT_RULES, type Context, type Product } from "./fitRules";
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
 
 const CONTEXT_TEXT: Record<Context, string> = {
   natural: "tampilan sehari-hari",
@@ -60,27 +61,27 @@ export function scoreFit(
     harmoni:
       harmoni >= 0.75
         ? ut === "warm"
-          ? "Nuansanya hangat, senada dengan undertone kulitmu yang cenderung warm."
+          ? t("Nuansanya hangat, senada dengan undertone kulitmu yang cenderung warm.")
           : ut === "cool"
-            ? "Nuansanya dingin, senada dengan undertone kulitmu yang cenderung cool."
-            : "Nuansanya seimbang dan aman untuk undertone kulitmu yang cenderung netral."
+            ? t("Nuansanya dingin, senada dengan undertone kulitmu yang cenderung cool.")
+            : t("Nuansanya seimbang dan aman untuk undertone kulitmu yang cenderung netral.")
         : harmoni >= 0.45
-          ? "Nuansanya cukup dekat dengan undertone kulitmu, tapi bukan yang paling selaras."
+          ? t("Nuansanya cukup dekat dengan undertone kulitmu, tapi bukan yang paling selaras.")
           : diff > 0
-            ? "Nuansanya terlalu hangat untuk undertone kulitmu, bisa terlihat kurang menyatu."
-            : "Nuansanya terlalu dingin untuk undertone kulitmu, bisa membuat wajah terlihat pucat.",
+            ? t("Nuansanya terlalu hangat untuk undertone kulitmu, bisa terlihat kurang menyatu.")
+            : t("Nuansanya terlalu dingin untuk undertone kulitmu, bisa membuat wajah terlihat pucat."),
     kontras:
       kontras >= 0.75
-        ? `Terang-gelapnya pas dengan kontras alami wajahmu yang ${profile.contrast.level}.`
+        ? t("Terang-gelapnya pas dengan kontras alami wajahmu yang {level}.", { level: t(profile.contrast.level) })
         : dL > target
-          ? `Agak terlalu gelap atau tegas dibanding kulitmu. Wajahmu berkontras ${profile.contrast.level}, jadi warna yang lebih senada akan terasa lebih natural.`
-          : `Agak terlalu samar dibanding kulitmu. Wajahmu berkontras ${profile.contrast.level}, jadi warna ini bisa hilang di wajah.`,
+          ? t("Agak terlalu gelap atau tegas dibanding kulitmu. Wajahmu berkontras {level}, jadi warna yang lebih senada akan terasa lebih natural.", { level: t(profile.contrast.level) })
+          : t("Agak terlalu samar dibanding kulitmu. Wajahmu berkontras {level}, jadi warna ini bisa hilang di wajah.", { level: t(profile.contrast.level) }),
     intensitas:
       intensitas >= 0.75
-        ? `Kepekatannya pas untuk ${CONTEXT_TEXT[context]}.`
+        ? t("Kepekatannya pas untuk {konteks}.", { konteks: t(CONTEXT_TEXT[context]) })
         : c > hi
-          ? `Cukup pekat untuk ${CONTEXT_TEXT[context]}. Pakai tipis-tipis kalau mau lebih natural.`
-          : `Agak lembut untuk ${CONTEXT_TEXT[context]}, hasilnya mungkin kurang terlihat.`,
+          ? t("Cukup pekat untuk {konteks}. Pakai tipis-tipis kalau mau lebih natural.", { konteks: t(CONTEXT_TEXT[context]) })
+          : t("Agak lembut untuk {konteks}, hasilnya mungkin kurang terlihat.", { konteks: t(CONTEXT_TEXT[context]) }),
   };
   const scored = (["harmoni", "kontras", "intensitas"] as const)
     .map((k) => ({ k, v: { harmoni, kontras, intensitas }[k] }))

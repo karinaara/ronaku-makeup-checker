@@ -46,7 +46,7 @@ Catatan: `foto3.jpg` ditimpa di tengah sesi; baris "AKU", "AKU2", dan foto2–7 
 - **Live view kamera:** deteksi wajah terus-menerus, area sampel tergambar di wajah, tombol aktif saat posisi pas, hitung mundur otomatis 3 detik (`HOLD_MS`, `COUNTDOWN_FROM` di `src/ui/LiveCamera.tsx`). Diuji dengan kamera palsu dari foto uji pemilik: lulus.
 - **Try-on eyeshadow** (wash dan gradient; bentuk mata dipilih manual: almond, bulat, hooded, monolid). Data di `src/rules/positionRules.ts`, renderer di `src/render/eyeshadow.ts`. Diuji dengan landmark sintetis: bukaan mata 0 dari 1482 piksel berubah pada 8 kombinasi bentuk x gaya; tinggi bayangan hooded > almond > monolid; gradient memudar ke atas. **Belum diuji pada wajah nyata**; nilai `lidHeight`, `wing`, dan alpha (multiply 0.55, color 0.5) adalah nilai awal.
 
-## Temuan terbuka untuk kalibrasi
+## Dwibahasa (ID / EN)
 - **Undertone:** skor jenuh di 0 dan 1 untuk hue di luar 42°–66°. Foto dekat batas mudah berpindah label (foto7: 55° -> 52°). Perlu rentang hue lebih lebar dan label "benar" dari tes eksternal.
 - **Foto cool (AKU, foto3, foto4):** b* sangat rendah (-0.2 sampai 3) untuk kulit. Kemungkinan filter atau cahaya berwarna; belum bisa dipastikan tanpa foto pembanding.
 - **Blur:** varians Laplacian dihitung pada crop 256 px; foto kecil/terkompresi berat (foto3 lama: 23) dinilai buram. Ambang 60/25 perlu diuji lagi pada foto dari kamera ponsel resolusi normal.
