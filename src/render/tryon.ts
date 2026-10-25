@@ -4,6 +4,7 @@ import { BLUSH_STYLES, type BlushStyleId } from "../rules/positionRules";
 import type { Pt } from "../types";
 import { contours, pick } from "../vision/contours";
 import { faceFrame, polygonBBox } from "../vision/geometry";
+import { drawEyeshadow, type EyeLook } from "./eyeshadow";
 
 export type LipFinish = "matte" | "satin" | "glossy";
 export type LipLook = { hex: string; finish: LipFinish; intensity: number };
@@ -15,7 +16,7 @@ export type BlushLook = {
   ukuran: number; // pengali
   intensitas: number; // 0..1
 };
-export type Look = { lip?: LipLook; blush?: BlushLook };
+export type Look = { lip?: LipLook; blush?: BlushLook; eye?: EyeLook };
 
 const FINISH = {
   matte: { opacity: 0.8, texture: 0.95, spec: 0 },
@@ -33,6 +34,7 @@ export function renderLook(canvas: HTMLCanvasElement, photo: HTMLCanvasElement, 
   ctx.drawImage(photo, 0, 0, canvas.width, canvas.height);
   const lm = landmarks.map((p) => ({ x: p.x * scale, y: p.y * scale }));
   if (look.blush) drawBlush(ctx, lm, look.blush);
+  if (look.eye) drawEyeshadow(ctx, lm, look.eye);
   if (look.lip) drawLips(ctx, lm, look.lip);
 }
 

@@ -3,13 +3,25 @@ import { FACE_SHAPE_LABEL, type FaceShapeKey } from "../color/skin";
 import type { Look, LipFinish } from "../render/tryon";
 import { scoreFit } from "../rules/fit";
 import { buildPalette } from "../rules/palette";
-import { BLUSH_BY_SHAPE, BLUSH_STYLES, DEFAULT_BLUSH_PARAMS, type BlushStyleId } from "../rules/positionRules";
+import {
+  BLUSH_BY_SHAPE,
+  BLUSH_STYLES,
+  DEFAULT_BLUSH_PARAMS,
+  EYE_BY_SHAPE,
+  EYE_SHAPES,
+  EYE_STYLES,
+  type BlushStyleId,
+  type EyeShapeId,
+  type EyeStyleId,
+} from "../rules/positionRules";
+import { EYE_SHAPE_NOTE } from "../rules/thresholds";
 import type { Analysis, FitLabel, Swatch } from "../types";
 import { FitBadge, FitBlock, Slider, Toast, TryOnCanvas, useToast } from "./components";
 import { DebugPanel } from "./DebugPanel";
 
 type Tab = "warna" | "posisi";
-type Product = "lipstik" | "blush";
+type Product = "lipstik" | "blush" | "eyeshadow";
+const fitKey = (p: Product) => (p === "lipstik" ? "lip" : p);
 const FINISH: { id: LipFinish; label: string }[] = [
   { id: "matte", label: "Matte" },
   { id: "satin", label: "Satin" },
@@ -38,6 +50,10 @@ export function TryOnScreen({ a, debug }: { a: Analysis; debug: boolean }) {
   const [product, setProduct] = useState<Product>("lipstik");
   const [lip, setLip] = useState<Swatch>(pal.lipstik[0]);
   const [blush, setBlush] = useState<Swatch>(pal.blush[0]);
+  const [eye, setEye] = useState<Swatch>(pal.eyeshadow[0]);
+  const [eyeStyle, setEyeStyle] = useState<EyeStyleId>("wash");
+  const [eyeShape, setEyeShape] = useState<EyeShapeId>("almond"); // manual; tebakan otomatis belum andal
+  const [eyeInt, setEyeInt] = useState(0.7);
   const [finish, setFinish] = useState<LipFinish>("satin");
   const [lipInt, setLipInt] = useState(0.8);
   const [styleId, setStyleId] = useState<BlushStyleId>("apple");
@@ -55,25 +71,32 @@ export function TryOnScreen({ a, debug }: { a: Analysis; debug: boolean }) {
     () => ({
       lip: { hex: lip.hex, finish, intensity: lipInt },
       blush: { hex: blush.hex, style: activeStyle, tinggi: params.tinggi, sudut: params.sudut, ukuran: params.ukuran, intensitas: params.intensitas },
+      eye: { hex: eye.hex, style: eyeStyle, shape: eyeShape, intensitas: eyeInt },
     }),
-    [lip, blush, finish, lipInt, activeStyle, params],
+    [lip, blush, eye, eyeStyle, eyeShape, eyeInt, finish, lipInt, activeStyle, params],
   );
   const before: Look = useMemo(() => ({}), []);
 
-  const current = product === "lipstik" ? lip : blush;
-  const options: Swatch[] = product === "lipstik" ? pal.lipstik : pal.blush;
-  const fit = useMemo(() => scoreFit(p, current.hex, product === "lipstik" ? "lip" : "blush"), [p, current, product]);
+  const current = product === "lipstik" ? lip : product === "blush" ? blush : eye;
+  const options: Swatch[] = product === "lipstik" ? pal.lipstik : product === "blush" ? pal.blush : pal.eyeshadow;
+  const fit = useMemo(() => scoreFit(p, current.hex, fitKey(product)), [p, current, product]);
   const styleFit = BLUSH_BY_SHAPE[shape][activeStyle];
+  const eyeFit = EYE_BY_SHAPE[eyeShape][eyeStyle];
 
-  const setCurrent = (s: Swatch) => (product === "lipstik" ? setLip(s) : setBlush(s));
+  const setCurrent = (s: Swatch) => (product === "lipstik" ? setLip(s) : product === "blush" ? setBlush(s) : setEye(s));
   const toggleCompare = (s: Swatch) =>
     setPicked((list) => (list.some((x) => x.hex === s.hex) ? list.filter((x) => x.hex !== s.hex) : list.length >= 4 ? list : [...list, s]));
   const onChip = (s: Swatch) => (compare ? toggleCompare(s) : setCurrent(s));
   const vote = (v: "suka" | "kurang") => {
-    saveFeedback({ produk: product, hex: current.hex, label: fit.label, suara: v, finish: product === "lipstik" ? finish : activeStyle });
+    saveFeedback({ produk: product, hex: current.hex, label: fit.label, suara: v, finish: product === "lipstik" ? finish : product === "blush" ? activeStyle : eyeStyle });
     toast.show("Terima kasih, masukanmu membantu menyetel aturan.");
   };
-  const lookFor = (s: Swatch): Look => (product === "lipstik" ? { ...look, lip: { ...look.lip!, hex: s.hex } } : { ...look, blush: { ...look.blush!, hex: s.hex } });
+  const lookFor = (s: Swatch): Look =>
+    product === "lipstik"
+      ? { ...look, lip: { ...look.lip!, hex: s.hex } }
+      : product === "blush"
+        ? { ...look, blush: { ...look.blush!, hex: s.hex } }
+        : { ...look, eye: { ...look.eye!, hex: s.hex } };
 
   return (
     <>
@@ -93,7 +116,7 @@ export function TryOnScreen({ a, debug }: { a: Analysis; debug: boolean }) {
           ) : (
             <div className="grid2">
               {picked.map((s) => {
-                const f = scoreFit(p, s.hex, product === "lipstik" ? "lip" : "blush");
+                const f = scoreFit(p, s.hex, fitKey(product));
                 return (
                   <div className="cell" key={s.hex}>
                     <TryOnCanvas analysis={a} look={lookFor(s)} maxW={360} label={`Wajah dengan ${s.nama}`} />
@@ -128,7 +151,7 @@ export function TryOnScreen({ a, debug }: { a: Analysis; debug: boolean }) {
           <div className="seg" aria-label="Produk">
             <button aria-pressed={product === "lipstik"} onClick={() => setProduct("lipstik")}>Lipstik</button>
             <button aria-pressed={product === "blush"} onClick={() => setProduct("blush")}>Blush</button>
-            <button disabled title="Segera hadir">Eyeshadow</button>
+            <button aria-pressed={product === "eyeshadow"} onClick={() => setProduct("eyeshadow")}>Eyeshadow</button>
           </div>
 
           <div className="chips" role="group" aria-label="Pilih warna">
@@ -175,6 +198,28 @@ export function TryOnScreen({ a, debug }: { a: Analysis; debug: boolean }) {
           )}
           {product === "blush" && (
             <Slider label="Intensitas" value={Math.round(params.intensitas * 100)} min={10} max={100} step={5} display={`${Math.round(params.intensitas * 100)}%`} onChange={(v) => setParams((s) => ({ ...s, intensitas: v / 100 }))} />
+          )}
+          {product === "eyeshadow" && (
+            <>
+              <div className="seg" aria-label="Gaya eyeshadow">
+                {EYE_STYLES.map((s) => (
+                  <button key={s.id} aria-pressed={eyeStyle === s.id} onClick={() => setEyeStyle(s.id)}>{s.nama}</button>
+                ))}
+              </div>
+              <p className="small muted">{EYE_STYLES.find((s) => s.id === eyeStyle)?.deskripsi}</p>
+              <div className="field">
+                <label htmlFor="bentukMata"><span>Bentuk matamu</span></label>
+                <select id="bentukMata" value={eyeShape} onChange={(e) => setEyeShape(e.target.value as EyeShapeId)}>
+                  {EYE_SHAPES.map((s) => <option key={s.id} value={s.id}>{s.nama}</option>)}
+                </select>
+                <small className="small muted">{EYE_SHAPE_NOTE}</small>
+              </div>
+              <Slider label="Intensitas" value={Math.round(eyeInt * 100)} min={10} max={100} step={5} display={`${Math.round(eyeInt * 100)}%`} onChange={(v) => setEyeInt(v / 100)} />
+              <div className="stack">
+                <div className="row"><FitBadge label={eyeFit.label} /><small className="small">saran gaya untuk bentuk matamu</small></div>
+                <ul className="reasons"><li>{eyeFit.alasan}</li></ul>
+              </div>
+            </>
           )}
 
           <div className="stack">

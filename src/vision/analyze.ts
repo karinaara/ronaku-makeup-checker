@@ -111,6 +111,35 @@ const labsOf = (px: RGB[], gains: RGB): Lab[] =>
     return rgbToLab(c[0], c[1], c[2]);
   });
 
+/** Validasi ukuran, arah hadap, dan kemiringan wajah. Melempar AnalysisError dengan pesan Bahasa Indonesia. */
+export function validateFace(lm: Pt[], w: number, h: number) {
+  const faceW = dist(lm[234], lm[454]);
+  const faceWidthFrac = faceW / Math.min(w, h); // sisi terpendek, supaya foto landscape tidak salah dinilai
+  if (faceWidthFrac < FACE_CHECK.minFaceWidthFrac)
+    throw new AnalysisError("small", "Wajah terlalu kecil di foto. Dekatkan wajah ke kamera sampai memenuhi bingkai.");
+  const t = ((lm[1].x - lm[234].x) * (lm[454].x - lm[234].x) + (lm[1].y - lm[234].y) * (lm[454].y - lm[234].y)) / (faceW * faceW);
+  if (Math.abs(t - 0.5) > FACE_CHECK.maxYaw)
+    throw new AnalysisError("yaw", "Wajah terlalu menoleh. Hadapkan wajah lurus ke kamera.");
+  const frame = faceFrame(lm);
+  if (Math.abs(frame.rollDeg) > FACE_CHECK.maxRollDeg)
+    throw new AnalysisError("roll", "Kepala terlalu miring. Tegakkan kepala dan ambil foto lagi.");
+  return { faceW, faceWidthFrac, frame };
+}
+
+/** Area sampel kulit: elips relatif terhadap landmark, skala dari jarak antar mata. */
+export function sampleRegionDefs(lm: Pt[]) {
+  const { ex, ey, ied } = faceFrame(lm);
+  const patch = (name: string, c: Pt, rx: number, ry: number) => ({ name, polygon: ellipsePolygon(c, rx * ied, ry * ied, ex, ey) });
+  const jaw = (side: 58 | 288) => lerpPt(lerpPt(lm[side], lm[152], 0.3), lm[side === 58 ? 61 : 291], 0.35);
+  return [
+    patch("Dahi", lerpPt(lm[10], lm[9], 0.5), 0.42, 0.14),
+    patch("Pipi kiri foto", lm[50], 0.26, 0.2),
+    patch("Pipi kanan foto", lm[280], 0.26, 0.2),
+    patch("Rahang kiri foto", jaw(58), 0.2, 0.16),
+    patch("Rahang kanan foto", jaw(288), 0.2, 0.16),
+  ];
+}
+
 export async function analyzeImage(source: CanvasImageSource, w: number, h: number): Promise<Analysis> {
   const photo = toCanvas(source, w, h);
   let landmarker;
@@ -124,29 +153,9 @@ export async function analyzeImage(source: CanvasImageSource, w: number, h: numb
   if (!raw) throw new AnalysisError("no-face", "Wajah tidak terdeteksi. Pastikan wajah terlihat jelas, tidak tertutup, dan menghadap kamera.");
   const lm: Pt[] = raw.map((p) => ({ x: p.x * photo.width, y: p.y * photo.height }));
 
-  // 1) Validasi wajah
-  const faceW = dist(lm[234], lm[454]);
-  const faceWidthFrac = faceW / Math.min(photo.width, photo.height); // sisi terpendek, supaya foto landscape tidak salah dinilai
-  if (faceWidthFrac < FACE_CHECK.minFaceWidthFrac)
-    throw new AnalysisError("small", "Wajah terlalu kecil di foto. Dekatkan wajah ke kamera sampai memenuhi bingkai.");
-  const t = ((lm[1].x - lm[234].x) * (lm[454].x - lm[234].x) + (lm[1].y - lm[234].y) * (lm[454].y - lm[234].y)) / (faceW * faceW);
-  if (Math.abs(t - 0.5) > FACE_CHECK.maxYaw)
-    throw new AnalysisError("yaw", "Wajah terlalu menoleh. Hadapkan wajah lurus ke kamera.");
-  const frame = faceFrame(lm);
-  if (Math.abs(frame.rollDeg) > FACE_CHECK.maxRollDeg)
-    throw new AnalysisError("roll", "Kepala terlalu miring. Tegakkan kepala dan ambil foto lagi.");
-
-  // 2) Area sampel kulit: elips relatif terhadap landmark, skala dari jarak antar mata
-  const { ex, ey, ied } = frame;
-  const patch = (name: string, c: Pt, rx: number, ry: number) => ({ name, polygon: ellipsePolygon(c, rx * ied, ry * ied, ex, ey) });
-  const jaw = (side: 58 | 288) => lerpPt(lerpPt(lm[side], lm[152], 0.3), lm[side === 58 ? 61 : 291], 0.35);
-  const regionDefs = [
-    patch("Dahi", lerpPt(lm[10], lm[9], 0.5), 0.42, 0.14),
-    patch("Pipi kiri foto", lm[50], 0.26, 0.2),
-    patch("Pipi kanan foto", lm[280], 0.26, 0.2),
-    patch("Rahang kiri foto", jaw(58), 0.2, 0.16),
-    patch("Rahang kanan foto", jaw(288), 0.2, 0.16),
-  ];
+  // 1) Validasi wajah, 2) area sampel kulit (juga dipakai live view kamera)
+  const { faceW, faceWidthFrac } = validateFace(lm, photo.width, photo.height);
+  const regionDefs = sampleRegionDefs(lm);
 
   // 3) Koreksi pencahayaan (gray-world dari area di luar wajah, dibatasi)
   const ovalPts = pick(lm, contours().faceOval);

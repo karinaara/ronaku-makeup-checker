@@ -3,7 +3,7 @@ import { FaceLandmarker } from "@mediapipe/tasks-vision";
 import { convexHull, loopsFromConnections, uniqueIndices } from "./geometry";
 import type { Pt } from "../types";
 
-let cache: { lipsOuter: number[]; lipsInner: number[]; faceOval: number[]; brows: number[] } | null = null;
+let cache: { lipsOuter: number[]; lipsInner: number[]; faceOval: number[]; brows: number[]; eyes: number[][] } | null = null;
 
 export function contours() {
   if (cache) return cache;
@@ -16,7 +16,9 @@ export function contours() {
     ...uniqueIndices(FaceLandmarker.FACE_LANDMARKS_LEFT_EYEBROW),
     ...uniqueIndices(FaceLandmarker.FACE_LANDMARKS_RIGHT_EYEBROW),
   ];
-  cache = { lipsOuter, lipsInner, faceOval, brows };
+  const longest = (c: Parameters<typeof loopsFromConnections>[0]) => loopsFromConnections(c).sort((a, b) => b.length - a.length)[0] ?? [];
+  const eyes = [longest(FaceLandmarker.FACE_LANDMARKS_LEFT_EYE), longest(FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE)];
+  cache = { lipsOuter, lipsInner, faceOval, brows, eyes };
   return cache;
 }
 

@@ -66,4 +66,40 @@ export const BLUSH_BY_SHAPE: Record<FaceShapeKey, Record<BlushStyleId, Entry>> =
   ),
 };
 
+// ---- Eyeshadow (NILAI AWAL, untuk divalidasi). Ukuran relatif terhadap lebar mata. ----
+export type EyeShapeId = "almond" | "bulat" | "hooded" | "monolid";
+export type EyeStyleId = "wash" | "gradient";
+
+export const EYE_SHAPES: { id: EyeShapeId; nama: string; lidHeight: number; wing: number }[] = [
+  { id: "almond", nama: "Almond", lidHeight: 0.5, wing: 0.18 },
+  { id: "bulat", nama: "Bulat", lidHeight: 0.55, wing: 0.3 }, // diperpanjang ke luar supaya mata terlihat lebih lonjong
+  { id: "hooded", nama: "Hooded (kelopak tertutup lipatan)", lidHeight: 0.72, wing: 0.15 }, // naik lebih tinggi agar warna tetap terlihat
+  { id: "monolid", nama: "Monolid (kelopak rata)", lidHeight: 0.45, wing: 0.2 },
+];
+
+export const EYE_STYLES: { id: EyeStyleId; nama: string; deskripsi: string }[] = [
+  { id: "wash", nama: "Wash", deskripsi: "Satu warna tipis merata di seluruh kelopak." },
+  { id: "gradient", nama: "Gradient", deskripsi: "Paling pekat di garis bulu mata, memudar ke atas." },
+];
+
+const eye = (wash: Entry, gradient: Entry) => ({ wash, gradient });
+export const EYE_BY_SHAPE: Record<EyeShapeId, Record<EyeStyleId, Entry>> = {
+  almond: eye(
+    { label: "Selaras", alasan: "Mata almond fleksibel, wash tipis menjaga tampilan tetap natural." },
+    { label: "Selaras", alasan: "Mata almond cocok dengan gradasi, hasilnya memberi dimensi tanpa berlebihan." },
+  ),
+  bulat: eye(
+    { label: "Bisa dicoba", alasan: BISA },
+    { label: "Selaras", alasan: "Gradasi yang lebih pekat di sudut luar membantu memanjangkan mata bulat." },
+  ),
+  hooded: eye(
+    { label: "Selaras", alasan: "Wash tipis tetap terlihat saat mata terbuka. Warna pekat di kelopak bisa tertutup lipatan." },
+    { label: "Bisa dicoba", alasan: BISA },
+  ),
+  monolid: eye(
+    { label: "Bisa dicoba", alasan: BISA },
+    { label: "Selaras", alasan: "Gradasi dari garis bulu mata memberi dimensi pada kelopak yang rata." },
+  ),
+};
+
 export const DEFAULT_BLUSH_PARAMS = { tinggi: 0, sudut: 0, ukuran: 1, intensitas: 0.6 };
